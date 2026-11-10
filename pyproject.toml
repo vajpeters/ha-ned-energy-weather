@@ -1,5 +1,7 @@
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+# Home Assistant must install its HTTPX alias before plugins import HTTPX.
+addopts = "-p no:respx"
 testpaths = ["tests"]
 pythonpath = ["."]
 

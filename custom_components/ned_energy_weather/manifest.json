@@ -1,16 +1,19 @@
 {
   "domain": "ned_energy_weather",
   "name": "NED Energieweerbericht",
-  "version": "0.1.0",
-  "documentation": "https://github.com/vajpeters/ha-ned-energy-weather",
-  "issue_tracker": "https://github.com/vajpeters/ha-ned-energy-weather/issues",
-  "codeowners": ["@vajpeters"],
+  "categories": ["energy"],
+  "codeowners": [
+    "@vajpeters"
+  ],
   "config_flow": true,
-  "single_config_entry": true,
   "dependencies": [
     "http",
     "websocket_api"
   ],
+  "documentation": "https://github.com/vajpeters/ha-ned-energy-weather",
   "integration_type": "service",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/vajpeters/ha-ned-energy-weather/issues",
+  "single_config_entry": true,
+  "version": "0.1.0"
 }
