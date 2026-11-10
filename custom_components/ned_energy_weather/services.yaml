@@ -1,0 +1,54 @@
+get_series:
+  name: Get NED series
+  description: Get a bounded raw time series with response data.
+  fields:
+    area:
+      name: Area
+      description: Use netherlands, province, or a catalog Point ID.
+      default: netherlands
+      example: province
+    type_id:
+      name: Type ID
+      required: true
+      example: 2
+      selector:
+        number:
+          min: 0
+          max: 59
+          mode: box
+    activity:
+      name: Activity ID
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 7
+          mode: box
+    classification:
+      name: Classification
+      default: actual
+      selector:
+        select:
+          options: [actual, forecast, historical_forecast]
+    granularity:
+      name: Granularity
+      default: hour
+      selector:
+        select:
+          options: [15min, hour, day]
+    start:
+      name: Start (inclusive)
+      required: true
+      example: "2026-11-09T00:00:00+00:00"
+      selector:
+        text:
+    end:
+      name: End (exclusive)
+      required: true
+      example: "2026-11-10T00:00:00+00:00"
+      selector:
+        text:
+refresh:
+  name: Refresh NED
+  description: Refresh current readings immediately. Administrator action.

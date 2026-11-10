@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "NED Energieweerbericht",
+        "data": {
+          "api_key": "NED API-sleutel",
+          "province": "Provincie",
+          "interval": "Verversingsinterval (minuten)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "NED-sleutel vernieuwen",
+        "data": {
+          "api_key": "NED API-sleutel"
+        }
+      },
+      "reconfigure": {
+        "title": "NED-sleutel wijzigen",
+        "data": {
+          "api_key": "NED API-sleutel"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "NED accepteert deze sleutel niet.",
+      "cannot_connect": "NED is niet bereikbaar of geeft een ongeldige reactie.",
+      "rate_limit": "NED-verzoeklimiet bereikt. Probeer het later opnieuw."
+    },
+    "abort": {
+      "already_configured": "NED is al geconfigureerd.",
+      "reauth_successful": "De sleutel is bijgewerkt.",
+      "reconfigure_successful": "De configuratie is bijgewerkt."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "NED-instellingen",
+        "data": {
+          "province": "Provincie",
+          "interval": "Verversingsinterval (minuten)"
+        }
+      }
+    }
+  }
+}

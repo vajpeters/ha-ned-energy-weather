@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "NED Energieweerbericht",
+        "data": {
+          "api_key": "NED API key",
+          "province": "Province",
+          "interval": "Refresh interval (minutes)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Replace the NED key",
+        "data": {
+          "api_key": "NED API key"
+        }
+      },
+      "reconfigure": {
+        "title": "Change the NED key",
+        "data": {
+          "api_key": "NED API key"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "NED rejected this key.",
+      "cannot_connect": "NED could not be reached or returned an invalid response.",
+      "rate_limit": "NED request limit reached. Try again later."
+    },
+    "abort": {
+      "already_configured": "NED is already configured.",
+      "reauth_successful": "The key was updated.",
+      "reconfigure_successful": "Configuration updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "NED settings",
+        "data": {
+          "province": "Province",
+          "interval": "Refresh interval (minutes)"
+        }
+      }
+    }
+  }
+}
