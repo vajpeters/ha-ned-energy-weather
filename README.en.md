@@ -118,6 +118,13 @@ git push origin v0.1.0
 
 Use **Releases → Draft a new release** to publish tag `v0.1.0`. Keep the card in the integration directory. Default HACS listing has additional requirements including Home Assistant Brands. A public custom repository can be added independently.
 
+## Test status and additional NED data
+
+The integration passed 18 automated Home Assistant tests. The Lovelace card was also tested in Chrome with simulated NED responses. Pytest, Hassfest, and HACS passed on GitHub. A live integration test with a valid NED API key is still pending. [GitHub Actions](https://github.com/vajpeters/ha-ned-energy-weather/actions/runs/42905779126)
+
+- **Historical generation.** On 11 November 2026, the public NED chart returned Dutch solar generation totals for the full calendar years 2018–2025 and a value for the ongoing year 2026. A separate historical request to the official `/v1/utilizations` API returned HTTP 401 without a key. NED has data from January 2016 for some energy sources. The integration’s time series action provides up to 30 days of history. [Solar generation](https://ned.nl/nl/dataportaal/energie-productie/elektriciteit/zonne-energie) · [NED API](https://ned.nl/nl/api)
+- **Electricity prices.** NED publishes Dutch day-ahead prices, the dynamic reference price, and imbalance prices through its separate DRP portal. A public CSV download for 9 November 2026 contained 96 quarter-hour intervals with these price series. The portal offers downloads from January 2023. These wholesale prices are outside the current integration’s `/v1/utilizations` catalog. [DRP and electricity prices](https://drp.ned.nl/nl/drp) · [NED data catalog](https://ned.nl/nl/datacatalogus)
+
 ## First field test
 
 - Install and complete the config flow with your own valid NED key.

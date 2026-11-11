@@ -118,6 +118,13 @@ git push origin v0.1.0
 
 Maak daarna in GitHub **Releases → Draft a new release** een release voor tag `v0.1.0`. Laat de ingebouwde kaart binnen de integratiemap. Voor opname in de standaard HACS-catalogus gelden aanvullende eisen, waaronder Home Assistant Brands. Een openbare custom repository kan afzonderlijk worden toegevoegd.
 
+## Teststatus en aanvullende NED-data
+
+De integratie is getest met 18 geautomatiseerde tests in Home Assistant. De Lovelace-kaart is ook in Chrome getest met gesimuleerde NED-responsen. Pytest, Hassfest en HACS zijn geslaagd op GitHub. Een live test van de integratie met een geldige NED API-sleutel staat nog open. [GitHub Actions](https://github.com/vajpeters/ha-ned-energy-weather/actions/runs/42905779126)
+
+- **Historische opwek.** Op 11 november 2026 is de openbare NED-grafiekdata voor landelijke zonne-opwek opgehaald. De reeks bevatte volledige jaarwaarden voor 2018–2025 en een lopende waarde voor 2026. Dezelfde historische proef via de officiële `/v1/utilizations`-API gaf zonder sleutel HTTP 401. NED heeft voor sommige energiedragers historie vanaf januari 2016. De tijdreeksactie van deze integratie kijkt maximaal 30 dagen terug. [Zonne-energie](https://ned.nl/nl/dataportaal/energie-productie/elektriciteit/zonne-energie) · [NED API](https://ned.nl/nl/api)
+- **Elektriciteitsprijzen.** NED publiceert via het aparte DRP-portaal historische Nederlandse day-aheadprijzen, de dynamische referentieprijs en onbalansprijzen. Een openbare CSV-download voor 9 november 2026 bevatte 96 kwartieren met deze prijsreeksen. Het portaal biedt downloads vanaf januari 2023. De prijzen zijn marktprijzen en vallen buiten de huidige integratie, die de catalogus van `/v1/utilizations` gebruikt. [DRP en elektriciteitsprijzen](https://drp.ned.nl/nl/drp) · [NED-datacatalogus](https://ned.nl/nl/datacatalogus)
+
 ## Eerste praktijktest
 
 - Installeer de integratie en doorloop de flow met een geldige eigen NED-sleutel.
