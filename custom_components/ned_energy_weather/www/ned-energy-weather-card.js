@@ -22,7 +22,8 @@ class NedEnergyWeatherCard extends HTMLElement {
         .body { padding: 16px; }
         .controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
         label { display: grid; gap: 4px; font-size: .85rem; min-width: 0; }
-        select, button {
+        [hidden] { display: none !important; }
+        select, input, button {
           color: var(--primary-text-color); background: var(--card-background-color);
           border: 1px solid var(--divider-color); border-radius: 5px;
           padding: 6px; font: inherit; max-width: 100%; min-height: 34px;
@@ -41,7 +42,11 @@ class NedEnergyWeatherCard extends HTMLElement {
       <ha-card>
         <section class="body">
           <h2></h2>
-          <div class="controls">
+          <label>Gegevens<select id="mode">
+            <option value="energy">Energie</option>
+            <option value="prices">Day-aheadprijs</option>
+          </select></label>
+          <div id="energy-controls" class="controls">
             <label>Gebied<select id="area"><option value="0">Nederland</option></select></label>
             <label class="datasets">Reeksen (max. 4)<select id="datasets" multiple size="4"></select></label>
             <label>Resolutie<select id="granularity">
@@ -50,8 +55,12 @@ class NedEnergyWeatherCard extends HTMLElement {
             <label>Historie<select id="past"><option>1</option><option>3</option><option>7</option><option>14</option><option>30</option></select></label>
             <label>Vooruit<select id="future"><option>0</option><option>1</option><option>3</option><option>7</option></select></label>
             <label>Meetveld<select id="field"></select></label>
-            <button id="load">Ophalen</button>
           </div>
+          <div id="price-controls" class="controls" hidden>
+            <label>Vanaf<input id="price-start" type="date" min="2023-01-01"></label>
+            <label>Tot en met<input id="price-end" type="date" min="2023-01-01"></label>
+          </div>
+          <button id="load">Ophalen</button>
           <p id="status" role="status"></p>
           <svg id="chart" role="img" aria-label="NED-tijdreeks"></svg>
           <div id="detail" class="detail"></div>
@@ -66,9 +75,22 @@ class NedEnergyWeatherCard extends HTMLElement {
       ? config.granularity : "hour";
     this.$("#past").value = "3";
     this.$("#future").value = "1";
+    const dates = new Intl.DateTimeFormat("sv-SE", {timeZone: "Europe/Amsterdam",
+      year: "numeric", month: "2-digit", day: "2-digit"});
+    const today = dates.format(new Date());
+    for (const id of ["#price-start", "#price-end"]) {
+      this.$(id).max = today;
+      this.$(id).value = dates.format(new Date(Date.now() - day));
+    }
+    this.$("#mode").value = config.mode === "prices" ? "prices" : "energy";
+    this.showControls();
+    this.$("#mode").onchange = () => {
+      this.showControls();
+      this.loadSelected();
+    };
     this.$("#area").onchange = () => this.populate();
-    this.$("#load").onclick = () => this.catalog ? this.load() : this.initialize();
-    if (this._hass) this.initialize();
+    this.$("#load").onclick = () => this.loadSelected();
+    if (this._hass) this.loadSelected();
   }
 
   $(selector) {
@@ -76,15 +98,51 @@ class NedEnergyWeatherCard extends HTMLElement {
   }
 
   set hass(hass) {
+    const first = !this._hass;
     this._hass = hass;
-    if (this.config && !this.catalog && !this.initializing) this.initialize();
+    if (first && this.config) this.loadSelected();
   }
 
   getCardSize() { return 6; }
 
+  showControls() {
+    const prices = this.$("#mode").value === "prices";
+    this.$("#energy-controls").hidden = prices;
+    this.$("#price-controls").hidden = !prices;
+  }
+
+  loadSelected() {
+    if (!this._hass) return;
+    if (this.$("#mode").value === "prices") return this.loadPrices();
+    if (this.catalog) return this.load();
+    return this.initialize();
+  }
+
+  async loadPrices() {
+    const version = ++this.generation;
+    const status = this.$("#status");
+    this.draw([], 0, 0, "€/MWh", "15min");
+    status.textContent = "Elektriciteitsprijzen laden…";
+    try {
+      const result = await this._hass.callWS({
+        type: command + "get_prices",
+        start: this.$("#price-start").value,
+        end: this.$("#price-end").value,
+      });
+      if (version !== this.generation) return;
+      const points = result.records.map((row) => ({
+        time: Date.parse(row.valid_from), value: row.day_ahead,
+      }));
+      status.textContent = points.length ? "" : "Geen prijzen voor deze periode.";
+      this.draw(points.length ? [{label: "Day-aheadprijs", color: colors[0], dash: "", points}] : [],
+        Date.parse(result.metadata.start), Date.parse(result.metadata.end), "€/MWh", "15min");
+    } catch (error) {
+      if (version === this.generation) status.textContent = error.message || "Prijzen ophalen mislukt.";
+    }
+  }
+
   async initialize() {
-    const version = this.generation;
-    this.initializing = true;
+    const version = ++this.generation;
     this.$("#status").textContent = "Catalogus laden…";
     try {
       const catalog = await this._hass.callWS({type: command + "catalog"});
@@ -96,8 +154,6 @@ class NedEnergyWeatherCard extends HTMLElement {
       await this.load();
     } catch (error) {
       if (version === this.generation) this.$("#status").textContent = error.message || "Catalogus niet beschikbaar.";
-    } finally {
-      this.initializing = false;
     }
   }
 

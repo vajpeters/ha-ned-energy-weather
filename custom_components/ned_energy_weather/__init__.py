@@ -12,6 +12,7 @@ from .api import NedClient
 from .cache import Cache
 from .const import DEFAULT_INTERVAL, DEFAULT_PROVINCE, DOMAIN, RESOURCE
 from .coordinator import NedCoordinator
+from .prices import PriceClient
 from .services import register_services
 from .websocket import register_websocket
 
@@ -20,6 +21,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass, config):
+    hass.data[DOMAIN] = PriceClient(async_get_clientsession(hass))
     register_services(hass)
     register_websocket(hass)
     await hass.http.async_register_static_paths(

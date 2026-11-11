@@ -49,6 +49,20 @@ get_series:
       example: "2026-11-10T00:00:00+00:00"
       selector:
         text:
+get_prices:
+  name: Get Dutch day-ahead prices
+  description: Get historical quarter-hour wholesale prices in EUR/MWh from NED DRP.
+  fields:
+    start:
+      name: First Amsterdam date
+      required: true
+      selector:
+        date:
+    end:
+      name: Last Amsterdam date (inclusive)
+      required: true
+      selector:
+        date:
 refresh:
   name: Refresh NED
   description: Refresh current readings immediately. Administrator action.

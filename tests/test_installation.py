@@ -3,7 +3,7 @@
 import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
@@ -146,12 +146,54 @@ async def test_websocket_and_resource(hass, loaded, hass_ws_client, hass_client)
     assert "customElements.define" in await response.text()
 
 
+async def test_prices_action_and_websocket_share_the_public_download(hass, loaded, hass_ws_client):
+    async def chunks(_):
+        yield (
+            b"electricity,validfrom,validto\n"
+            b"-12.5,2025-10-26T00:00:00Z,2025-10-26T00:15:00Z\n"
+            b"34,2025-10-26T01:00:00Z,2025-10-26T01:15:00Z\n"
+            b"N/A,2025-10-26T01:15:00Z,2025-10-26T01:30:00Z\n"
+            b"50,2025-10-26T23:00:00Z,2025-10-26T23:15:00Z\n"
+        )
+
+    response = Mock(status=200, content=Mock(iter_chunked=chunks))
+    context = MagicMock()
+    context.__aenter__.return_value = response
+    session = Mock(get=Mock(return_value=context))
+    hass.data[DOMAIN].session = session
+    query = {"start": "2025-10-26", "end": "2025-10-26"}
+    result = await hass.services.async_call(
+        DOMAIN, "get_prices", query, blocking=True, return_response=True
+    )
+    assert result["metadata"]["start"] == "2025-10-25T22:00:00+00:00"
+    assert result["metadata"]["end"] == "2025-10-26T23:00:00+00:00"
+    assert [row["day_ahead"] for row in result["records"]] == [-12.5, 34.0]
+
+    ws = await hass_ws_client(hass)
+    await ws.send_json({"id": 1, "type": f"{DOMAIN}/get_prices", **query})
+    reply = await ws.receive_json()
+    assert reply["success"]
+    assert reply["result"] == result
+    session.get.assert_called_once()
+    assert session.get.call_args.kwargs["headers"] == {"Accept": "text/csv"}
+    assert session.get.call_args.kwargs["params"]["validfrom[strictly_before]"] == "2025-10-27"
+
+    with pytest.raises(HomeAssistantError, match="up to 31 days"):
+        await hass.services.async_call(
+            DOMAIN,
+            "get_prices",
+            {**query, "start": "2025-09-25"},
+            blocking=True,
+            return_response=True,
+        )
+
+
 def test_repository_metadata():
     root = Path(__file__).resolve().parents[1]
     component = root / "custom_components" / DOMAIN
     manifest = json.loads((component / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["domain"] == DOMAIN and manifest["config_flow"]
-    assert manifest["version"] == "0.1.0"
+    assert manifest["version"] == "0.2.0"
     assert (
         json.loads((root / "hacs.json").read_text(encoding="utf-8"))["homeassistant"] == "2026.11.0"
     )
@@ -162,5 +204,6 @@ def test_repository_metadata():
         assert set(translations["config"]["step"]) == {"user", "reauth_confirm", "reconfigure"}
     assert set(safe_load((component / "services.yaml").read_text(encoding="utf-8"))) == {
         "get_series",
+        "get_prices",
         "refresh",
     }

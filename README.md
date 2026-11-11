@@ -1,4 +1,4 @@
-# NED Energieweerbericht 0.1.0
+# NED Energieweerbericht 0.2.0
 
 [English documentation](README.en.md)
 
@@ -101,6 +101,22 @@ Kies een gebied, maximaal vier reeksen, één meetveld, de resolutie en een hist
 - **Diagnose** — de diagnostische sensor meldt het laatste succesvolle update-tijdstip en API-beschikbaarheid. Download integratiediagnostiek via het menu voor gegevensversheid en opslagstatus. Diagnostiek bevat geen sleutel. Filter de systeemlog op `custom_components.ned_energy_weather`.
 - **Bijwerken** — installeer de nieuwe versie via je pakketbeheerder of vervang de integratiemap en herstart. **Verwijderen** — verwijder eerst de integratie-invoer en de Lovelace-resource. Verwijder daarna het pakket en herstart indien gevraagd. Bij het verwijderen van de invoer wist Home Assistant de lokale prognoseopslag van die invoer.
 
+## Historische day-aheadprijzen
+
+Kies **Day-aheadprijs** bij **Gegevens** op de Lovelace-kaart, selecteer **Vanaf** en **Tot en met** en klik op **Ophalen**. Je kunt per keer maximaal 31 dagen opvragen vanaf 1 januari 2023. De datums volgen de Nederlandse markt (Europe/Amsterdam). De grafiek gebruikt de tijdzone van Home Assistant en toont groothandelsprijzen in €/MWh. Voeg `mode: prices` toe aan de kaartconfiguratie om direct in de prijsweergave te openen.
+
+De prijzen komen van de openbare CSV-download van NED DRP. Die gebruikt een apart eindpunt zonder extra API-sleutel. Voor de energiereeksen blijft je bestaande NED-sleutel nodig. [NED DRP-portaal](https://drp.ned.nl/nl/drp)
+
+```yaml
+action: ned_energy_weather.get_prices
+data:
+  start: "2026-11-09"
+  end: "2026-11-09"
+response_variable: ned_prices
+```
+
+De einddatum is inclusief. Gebruik `ned_prices.records` voor de prijzen. Elk record bevat `valid_from` en `valid_to` in UTC en `day_ahead` in EUR/MWh. Kwartieren waarvoor NED geen day-aheadprijs levert, ontbreken in de reeks.
+
 ## Publicatie op GitHub
 
 De projectrepository is [vajpeters/ha-ned-energy-weather](https://github.com/vajpeters/ha-ned-energy-weather). Voor publicatie in een andere lege openbare repository pas je `documentation`, `issue_tracker` en `codeowners` aan in `custom_components/ned_energy_weather/manifest.json`. Voer vanuit de uitgepakte projectmap in Git Bash uit:
@@ -112,18 +128,18 @@ git remote add origin "$REPO_URL"
 git add .
 git commit -m "Initial NED Energieweerbericht release"
 git push -u origin main
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
-Maak daarna in GitHub **Releases → Draft a new release** een release voor tag `v0.1.0`. Laat de ingebouwde kaart binnen de integratiemap. Voor opname in de standaard HACS-catalogus gelden aanvullende eisen, waaronder Home Assistant Brands. Een openbare custom repository kan afzonderlijk worden toegevoegd.
+Maak daarna in GitHub **Releases → Draft a new release** een release voor tag `v0.2.0`. Laat de ingebouwde kaart binnen de integratiemap. Voor opname in de standaard HACS-catalogus gelden aanvullende eisen, waaronder Home Assistant Brands. Een openbare custom repository kan afzonderlijk worden toegevoegd.
 
 ## Teststatus en aanvullende NED-data
 
-De integratie is getest met 18 geautomatiseerde tests in Home Assistant. De Lovelace-kaart is ook in Chrome getest met gesimuleerde NED-responsen. Pytest, Hassfest en HACS zijn geslaagd op GitHub. Een live test van de integratie met een geldige NED API-sleutel staat nog open. [GitHub Actions](https://github.com/vajpeters/ha-ned-energy-weather/actions/runs/42905779126)
+Versie 0.2.0 is lokaal getest met 19 geautomatiseerde Home Assistant-tests en een Chrome-test met gesimuleerde kaartdata. De prijsclient is live getest zonder sleutel, onder meer met 100 kwartieren op de dag waarop de wintertijd inging. Een live test van de energiereeksen met een geldige NED API-sleutel staat nog open. [GitHub Actions](https://github.com/vajpeters/ha-ned-energy-weather/actions)
 
 - **Historische opwek.** Op 11 november 2026 is de openbare NED-grafiekdata voor landelijke zonne-opwek opgehaald. De reeks bevatte volledige jaarwaarden voor 2018–2025 en een lopende waarde voor 2026. Dezelfde historische proef via de officiële `/v1/utilizations`-API gaf zonder sleutel HTTP 401. NED heeft voor sommige energiedragers historie vanaf januari 2016. De tijdreeksactie van deze integratie kijkt maximaal 30 dagen terug. [Zonne-energie](https://ned.nl/nl/dataportaal/energie-productie/elektriciteit/zonne-energie) · [NED API](https://ned.nl/nl/api)
-- **Elektriciteitsprijzen.** NED publiceert via het aparte DRP-portaal historische Nederlandse day-aheadprijzen, de dynamische referentieprijs en onbalansprijzen. Een openbare CSV-download voor 9 november 2026 bevatte 96 kwartieren met deze prijsreeksen. Het portaal biedt downloads vanaf januari 2023. De prijzen zijn marktprijzen en vallen buiten de huidige integratie, die de catalogus van `/v1/utilizations` gebruikt. [DRP en elektriciteitsprijzen](https://drp.ned.nl/nl/drp) · [NED-datacatalogus](https://ned.nl/nl/datacatalogus)
+- **Elektriciteitsprijzen.** Een openbare CSV-download voor 9 november 2026 bevatte 96 kwartieren. Versie 0.2.0 ondersteunt de day-aheadprijs uit die download. Het DRP-portaal publiceert ook de dynamische referentieprijs en onbalansprijzen. [DRP en elektriciteitsprijzen](https://drp.ned.nl/nl/drp)
 
 ## Eerste praktijktest
 
